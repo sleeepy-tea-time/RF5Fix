@@ -1,12 +1,12 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Steamworks;
 using System;
 using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -21,7 +21,7 @@ namespace RF5Fix
         #region PluginInfo
         private const string PLUGIN_GUID = "RF5Fix";
         private const string PLUGIN_NAME = "RF5Fix";
-        private const string PLUGIN_VERSION = "0.1.5";
+        private const string PLUGIN_VERSION = "0.1.6";
         private const string GAME_PROCESS = "Rune Factory 5.exe";
         #endregion
 
@@ -514,6 +514,73 @@ namespace RF5Fix
         [HarmonyPatch]
         public class ControllerPatch
         {
+
+            // Translate config value to ESteamInputType
+            private static ESteamInputType GetSteamInputType(string inputType)
+            {
+                ESteamInputType controllerType = sControllerType.Value switch
+                {
+                    "Xbox" => ESteamInputType.k_ESteamInputType_XBoxOneController,
+                    "PS4" => ESteamInputType.k_ESteamInputType_PS4Controller,
+                    "PS5" => ESteamInputType.k_ESteamInputType_PS5Controller,
+                    "Switch" => ESteamInputType.k_ESteamInputType_SwitchProController,
+                    "Default" => ESteamInputType.k_ESteamInputType_XBoxOneController,
+                    _ => ESteamInputType.k_ESteamInputType_XBoxOneController,
+                };
+
+                return controllerType;
+            }
+
+            private const EInputActionOrigin INPUT_ACTION_ORIGIN_NONE = EInputActionOrigin.k_EInputActionOrigin_None;
+
+            private static void TranslateActionOrigins(ref Il2CppStructArray<EInputActionOrigin> result)
+            {
+                ESteamInputType controllerType = GetSteamInputType(sControllerType.Value);
+
+                for (int i = 0; i < result.Length; i++)
+                {
+                    if (result[i] != EInputActionOrigin.k_EInputActionOrigin_None)
+                    {
+                        EInputActionOrigin translatedValue = SteamInput.TranslateActionOrigin(controllerType, result[i]);
+
+                        // RF5 only checks the first value of the array, if that value is k_EInputActionOrigin_None it defaults to keyboard icons.
+                        // So we just need to find the first value that maps appropriately and put it in that slot and send it back to RF5
+                        if (translatedValue != INPUT_ACTION_ORIGIN_NONE)
+                        {
+                            Log.LogInfo($"Action Origin Translation:  {i}, {result[i]} -> {translatedValue}");
+                            result[0] = translatedValue;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Call steam input to translate the button press to the controller specified in the config
+            [HarmonyPatch(typeof(RF5SteamInput.SteamInputManager), nameof(RF5SteamInput.SteamInputManager.GetActionOrigin), new[] { typeof(RF5SteamInput.EDigitalActions_InGameControls) })]
+            [HarmonyPostfix]
+            public static void Postfix_SteamInputManager_GetActionOrigin_Translate(RF5SteamInput.EDigitalActions_InGameControls act, ref Il2CppStructArray<EInputActionOrigin> __result)
+            {
+                if (__result == null)
+                {
+                    return;
+                }
+
+                TranslateActionOrigins(ref __result);
+            }
+
+            // Call steam input to translate the analog input to the controller specified in the config
+            [HarmonyPatch(typeof(RF5SteamInput.SteamInputManager), nameof(RF5SteamInput.SteamInputManager.GetActionOrigin), new[] { typeof(RF5SteamInput.EAnalogActions_InGameControls) })]
+            [HarmonyPostfix]
+            public static void Postfix_SteamInputManager_GetActionOrigin_Translate(RF5SteamInput.EAnalogActions_InGameControls act, ref Il2CppStructArray<EInputActionOrigin> __result)
+            {
+                if (__result == null)
+                {
+                    return;
+                }
+
+                TranslateActionOrigins(ref __result);
+            }
+
             // Spoof RF5's steam input controller type
             [HarmonyPatch(typeof(RF5SteamInput.SteamInputManager), nameof(RF5SteamInput.SteamInputManager.GetConnectingControllerType))]
             [HarmonyPostfix]

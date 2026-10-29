@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>RF5Fix</AssemblyName>
     <Description>RF5 Fix</Description>
-    <Version>0.1.4</Version>
+    <Version>0.1.6</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -24,6 +24,9 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>libs\Assembly-CSharp.stripped.dll</HintPath>
     </Reference>
+	  <Reference Include="Assembly-CSharp-firstpass">
+		  <HintPath>libs\Assembly-CSharp-firstpass.dll</HintPath>
+	  </Reference>
     <Reference Include="Cinemachine">
       <HintPath>libs\Cinemachine.stripped.dll</HintPath>
     </Reference>
