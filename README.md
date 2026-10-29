@@ -15,12 +15,15 @@ This BepInEx plugin for the game Rune Factory 5 features:
 
 ## Installation
 - Grab the latest release of RF5Fix from [here.](https://github.com/sleeepy-tea-time/RF5Fix/releases)
-- Extract the contents of the release zip in to the game directory.<br />(e.g. "**steamapps\common\Rune Factory 5**" for Steam).
-- Run the game once to generate a config file located at **<GameDirectory>\BepInEx\config\RF5Fix.cfg**
+- Extract the contents of the release zip in to the game directory.
+- (e.g. "steamapps\common\Rune Factory 5" for Steam).
+- Run the game once to generate a config file located at \BepinEx\config\RF5Fix.cfg
 - The first launch may take a little while as BepInEx does its magic.
+- On Steam Deck it should be enough to update RF5Fix.cfg to set `ControllerType.Override = true` and `ControllerType = Xbox` (or whichever value you prefer)
+- On Steam Deck you will also have to add the launch options in the game's properties `WINEDLLOVERRIDES="winhttp=n,b" %command%`
 
 ### Linux
-- If you are running Linux (for example with the Steam Deck) then the game needs to have it's launch option changed to load BepInEx.
+- If you are running Linux (for example with the Steam Deck or Steam Machine) then the game needs to have it's launch option changed to load BepInEx.
 - You can do this by going to the game properties in Steam and finding "LAUNCH OPTIONS".
 - Make sure the launch option is set to: ```WINEDLLOVERRIDES="winhttp=n,b" %command%```
 
